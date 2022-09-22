@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "739503028370",
+    "project_id": "agro-nepal",
+    "storage_bucket": "agro-nepal.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:739503028370:android:6145760ad82d3c3a060e4b",
+        "android_client_info": {
+          "package_name": "com.example.agro_nepal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "739503028370-natm7jna9gjtd6r7one71paceeg1g03h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdcr7gTLyMDthwpaw4qnvLWUTMvTHiDis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "739503028370-natm7jna9gjtd6r7one71paceeg1g03h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
