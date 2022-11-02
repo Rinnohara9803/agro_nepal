@@ -1,14 +1,19 @@
 import 'dart:io';
+import 'package:agro_nepal/pages/forgot_password_page.dart';
 import 'package:agro_nepal/pages/sign_in_page.dart';
 import 'package:agro_nepal/pages/verify_email_page.dart';
+import 'package:agro_nepal/providers/profile_provider.dart';
 import 'package:agro_nepal/utilities/snackbars.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
+import '../services/apis/notifications_api.dart';
 import '../utilities/themes.dart';
 import '../widgets/circular_progress_indicator.dart';
 import '../widgets/general_textformfield.dart';
@@ -31,6 +36,18 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   File? _selectedImage;
   String? _imageName;
+
+  String? _token = '';
+  void getToken(String userId) async {
+    await FirebaseMessaging.instance.getToken().then((token) {
+      setState(() {
+        _token = token;
+      });
+      print(_token);
+      Notifications.saveToken(token!, userId);
+    });
+  }
+
   Future<void> _getUserPicture(ImageSource imageSource) async {
     ImagePicker picker = ImagePicker();
     final image = await picker.pickImage(
@@ -87,16 +104,22 @@ class _SignUpPageState extends State<SignUpPage> {
           )
           .set(
         {
+          'userId': userCredential.user!.uid,
           'userName': _userNameController.text,
           'email': _emailController.text,
           'imageUrl': imageUrl,
+          'tag': 'user',
         },
-      ).then((_) {
-        print('sign up done');
-        Navigator.pushNamed(
-          context,
-          VerifyEmailPage.routeName,
-        );
+      ).then((_) async {
+        getToken(FirebaseAuth.instance.currentUser!.uid);
+        await Provider.of<ProfileProvider>(context, listen: false)
+            .fetchProfile()
+            .then((value) {
+          Navigator.pushReplacementNamed(
+            context,
+            VerifyEmailPage.routeName,
+          );
+        });
       });
     } on SocketException catch (_) {
       SnackBars.showNoInternetConnectionSnackBar(context);
@@ -131,7 +154,6 @@ class _SignUpPageState extends State<SignUpPage> {
               left: 10,
               right: 10,
               top: 10,
-              bottom: 30,
             ),
             height: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.top -
@@ -146,8 +168,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   Image.asset(
                     'images/planting.png',
-                    height: 110,
-                    width: 110,
+                    height: 90,
+                    width: 90,
                   ),
                   const SizedBox(
                     height: 10,
@@ -157,7 +179,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: ThemeClass.primaryColor,
-                      fontSize: 35,
+                      fontSize: 30,
                       fontFamily: 'Lato',
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
@@ -170,10 +192,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     children: [
                       CircleAvatar(
                         backgroundColor: Colors.black,
-                        radius: MediaQuery.of(context).devicePixelRatio * 24,
+                        radius: MediaQuery.of(context).devicePixelRatio * 20,
                         child: CircleAvatar(
                           backgroundColor: Colors.white,
-                          radius: MediaQuery.of(context).devicePixelRatio * 23,
+                          radius: MediaQuery.of(context).devicePixelRatio * 19,
                           backgroundImage: _selectedImage == null
                               ? null
                               : FileImage(
@@ -283,7 +305,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                                 vertical: 15,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: Colors.blueGrey,
+                                                color: ThemeClass.primaryColor,
                                                 borderRadius:
                                                     BorderRadius.circular(5),
                                               ),
@@ -409,14 +431,20 @@ class _SignUpPageState extends State<SignUpPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      AutoSizeText(
-                        'Forgot Password ?',
-                        style: TextStyle(
-                          color: ThemeClass.primaryColor,
-                          fontSize: 15,
-                          fontFamily: 'Lato',
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
+                      InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(
+                              context, ForgotPasswordPage.routeName);
+                        },
+                        child: AutoSizeText(
+                          'Forgot Password ?',
+                          style: TextStyle(
+                            color: ThemeClass.primaryColor,
+                            fontSize: 15,
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ],

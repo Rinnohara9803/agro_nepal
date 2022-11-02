@@ -1,4 +1,6 @@
+import 'package:agro_nepal/pages/cart_page.dart';
 import 'package:agro_nepal/pages/category_page.dart';
+import 'package:agro_nepal/pages/home_page.dart';
 import 'package:agro_nepal/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 
@@ -27,15 +29,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Agro Nepal',
-          ),
-          centerTitle: true,
-          leading: Container(),
-        ),
-        body: Container(
-          color: Colors.amber,
+        body: SizedBox(
           width: double.infinity,
           height: MediaQuery.of(context).size.height,
           child: PageView(
@@ -47,13 +41,9 @@ class _DashboardPageState extends State<DashboardPage> {
               });
             },
             children: const [
-              Center(
-                child: Text('Home'),
-              ),
+              HomePage(),
               CategoryPage(),
-              Center(
-                child: Text('Cart'),
-              ),
+              CartPage(),
               ProfilePage(),
             ],
           ),

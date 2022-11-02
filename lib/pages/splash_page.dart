@@ -3,10 +3,18 @@ import 'dart:io';
 import 'package:agro_nepal/pages/dashboard_page.dart';
 import 'package:agro_nepal/pages/sign_in_page.dart';
 import 'package:agro_nepal/pages/verify_email_page.dart';
+import 'package:agro_nepal/providers/profile_provider.dart';
+import 'package:agro_nepal/utilities/themes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:provider/provider.dart';
+import '../main.dart';
+import '../services/apis/notifications_api.dart';
+import '../services/shared_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({Key? key}) : super(key: key);
@@ -16,12 +24,108 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  String? _token;
+  final user = FirebaseAuth.instance.currentUser;
+
+  Future<void> getNotificationStatus() async {
+    await Notifications.getIsNotificationOnValue();
+  }
+
   @override
   void initState() {
     Future.delayed(const Duration(seconds: 0), () {
       fetchUser();
     });
+    getNotificationStatus();
     super.initState();
+    requestPermission();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (!SharedService.isNotificationOn) {
+        return;
+      }
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification!.android;
+
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              channelDescription: channel.description,
+              color: Colors.white,
+              playSound: true,
+              importance: Importance.high,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (!SharedService.isNotificationOn) {
+        return;
+      }
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification!.android;
+
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              priority: Priority.high,
+              channelDescription: channel.description,
+              color: Colors.white,
+              playSound: true,
+              importance: Importance.high,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  void requestPermission() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission.');
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
+      print('User granted provisional permission.');
+    } else {
+      print('User declined the permission.');
+    }
+  }
+
+  void getToken(String userId) async {
+    await FirebaseMessaging.instance.getToken().then((token) {
+      setState(() {
+        _token = token;
+      });
+      print(_token);
+      Notifications.saveToken(token!, userId);
+    });
   }
 
   Future fetchUser() async {
@@ -30,27 +134,22 @@ class _SplashPageState extends State<SplashPage> {
       Navigator.pushNamed(context, SignInPage.routeName);
     } else {
       final user = FirebaseAuth.instance.currentUser;
-      final userId = user?.uid;
-      print(user);
 
       if (user?.emailVerified == false) {
         Navigator.pushNamed(context, VerifyEmailPage.routeName);
         return;
       } else {
         try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .get()
-              .then(
-            (data) {
-              Navigator.pushNamed(context, DashboardPage.routeName);
-            },
-          );
+          await Provider.of<ProfileProvider>(context, listen: false)
+              .fetchProfile()
+              .then((value) {
+            getToken(user!.uid);
+            Navigator.pushReplacementNamed(context, DashboardPage.routeName);
+          });
         } on SocketException catch (_) {
-          Navigator.pushNamed(context, SignInPage.routeName);
+          Navigator.pushReplacementNamed(context, SignInPage.routeName);
         } catch (e) {
-          Navigator.pushNamed(context, SignInPage.routeName);
+          Navigator.pushReplacementNamed(context, SignInPage.routeName);
         }
       }
     }
@@ -60,7 +159,7 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.deepPurple.withOpacity(
+        backgroundColor: ThemeClass.primaryColor.withOpacity(
           0.7,
         ),
         body: Center(
@@ -73,7 +172,7 @@ class _SplashPageState extends State<SplashPage> {
                 width: 150,
               ),
               const AutoSizeText(
-                'mhicha',
+                'agro_nepal',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

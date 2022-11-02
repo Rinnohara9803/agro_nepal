@@ -1,5 +1,6 @@
 import 'package:agro_nepal/models/category.dart';
-import 'package:agro_nepal/widgets/circular_progress_indicator.dart';
+import 'package:agro_nepal/pages/productsby_category_page.dart';
+import 'package:agro_nepal/utilities/themes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -26,38 +27,88 @@ class _CategoryPageState extends State<CategoryPage>
         }
       });
     } catch (e) {
-      print(
-        e.toString(),
-      );
+      return Future.error(e.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder(
-      future: fetchCategories(),
-      builder: ((context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return ProgressIndicator1();
-        } else {
-          return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: categories
-                  .map((category) => Column(
-                        children: [
-                          Text(category.categoryImageUrl),
-                          const SizedBox(
-                            height: 10,
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 4, 122, 83),
+        leading: Container(),
+        title: const Text(
+          'Categories',
+        ),
+        centerTitle: true,
+      ),
+      body: FutureBuilder(
+        future: fetchCategories(),
+        builder: ((context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(
+                  color: Colors.green,
+                  strokeWidth: 2.0,
+                ),
+              ),
+            );
+          } else {
+            return ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(context, ProductsByCategoryPage.routeName, arguments: categories[index].categoryName,);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 10,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 15,
+                      horizontal: 10,
+                    ),
+                    height: MediaQuery.of(context).size.height * 0.14,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        15,
+                      ),
+                      border: Border.all(
+                        color: Colors.black,
+                      ),
+                      color: ThemeClass.primaryColor,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Image(
+                            image:
+                                NetworkImage(categories[index].categoryImageUrl),
                           ),
-                        ],
-                      ))
-                  .toList(),
-            ),
-          );
-        }
-      }),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            categories[index].categoryName,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        }),
+      ),
     );
   }
 }

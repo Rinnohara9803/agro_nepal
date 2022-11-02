@@ -1,12 +1,17 @@
 import 'dart:io';
 
 import 'package:agro_nepal/pages/dashboard_page.dart';
+import 'package:agro_nepal/pages/forgot_password_page.dart';
 import 'package:agro_nepal/pages/sign_up_page.dart';
 import 'package:agro_nepal/pages/verify_email_page.dart';
+import 'package:agro_nepal/providers/profile_provider.dart';
 import 'package:agro_nepal/utilities/snackbars.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/apis/notifications_api.dart';
 import '../utilities/themes.dart';
 import '../widgets/circular_progress_indicator.dart';
 import '../widgets/general_textformfield.dart';
@@ -21,6 +26,18 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  String? _token = '';
+
+  void getToken(String userId) async {
+    await FirebaseMessaging.instance.getToken().then((token) {
+      setState(() {
+        _token = token;
+      });
+      print(_token);
+      Notifications.saveToken(token!, userId);
+    });
+  }
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -43,12 +60,20 @@ class _SignInPageState extends State<SignInPage> {
         email: _emailController.text,
         password: _passwordController.text,
       )
-          .then((value) {
+          .then((value) async {
         isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
         if (!isEmailVerified) {
-          Navigator.pushNamed(context, VerifyEmailPage.routeName);
+          Navigator.pushReplacementNamed(context, VerifyEmailPage.routeName);
         } else {
-          Navigator.of(context).pushNamed(DashboardPage.routeName);
+          getToken(_auth.currentUser!.uid);
+          await Provider.of<ProfileProvider>(context, listen: false)
+              .fetchProfile()
+              .then((value) {
+            Navigator.pushReplacementNamed(
+              context,
+              DashboardPage.routeName,
+            );
+          });
         }
       });
     } on SocketException catch (_) {
@@ -76,7 +101,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
             height: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.top -
-                MediaQuery.of(context).padding.top,
+                MediaQuery.of(context).padding.bottom,
             width: MediaQuery.of(context).size.width,
             child: Form(
               key: _formKey,
@@ -87,8 +112,8 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   Image.asset(
                     'images/planting.png',
-                    height: 180,
-                    width: 180,
+                    height: 140,
+                    width: 140,
                   ),
                   const SizedBox(
                     height: 10,
@@ -151,14 +176,20 @@ class _SignInPageState extends State<SignInPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      AutoSizeText(
-                        'Forgot Password ?',
-                        style: TextStyle(
-                          color: ThemeClass.primaryColor,
-                          fontSize: 15,
-                          fontFamily: 'Lato',
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
+                      InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(
+                              context, ForgotPasswordPage.routeName);
+                        },
+                        child: AutoSizeText(
+                          'Forgot Password ?',
+                          style: TextStyle(
+                            color: ThemeClass.primaryColor,
+                            fontSize: 15,
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ],
