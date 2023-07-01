@@ -10,6 +10,12 @@ class ProductsProvider with ChangeNotifier {
     return [..._products];
   }
 
+  List<Product> _searchProducts = [];
+
+  List<Product> get searchProducts {
+    return [..._searchProducts];
+  }
+
   List<Product> _favourites = [];
 
   List<Product> get favourites {
@@ -263,6 +269,19 @@ class ProductsProvider with ChangeNotifier {
       notifyListeners();
     } on FirebaseException catch (e) {
       return Future.error(e.toString());
+    } catch (e) {
+      return Future.error(e.toString());
+    }
+  }
+
+  Future<void> fetchSearchProducts(String productName) async {
+    try {
+      _searchProducts = products.where((product) {
+        final productTitle = product.productName.toLowerCase();
+        final searchInput = productName.toLowerCase();
+        return productTitle.contains(searchInput);
+      }).toList();
+      notifyListeners();
     } catch (e) {
       return Future.error(e.toString());
     }

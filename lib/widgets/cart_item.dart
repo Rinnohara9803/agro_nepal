@@ -121,7 +121,7 @@ class _CartItemState extends State<CartItem> {
                   Expanded(
                     child: Text(
                       maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis,
                       widget.title,
                     ),
                   ),
@@ -180,7 +180,7 @@ class _CartItemState extends State<CartItem> {
                             height: MediaQuery.of(context).size.height * 0.5,
                             child: SingleChildScrollView(
                               child: Column(
-                                children: [
+                                children: [ 
                                   CircleAvatar(
                                     radius: 72,
                                     backgroundColor:
@@ -334,30 +334,31 @@ class _CartItemState extends State<CartItem> {
                 ),
                 onTap: () {
                   showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Are you Sure?'),
-                          content: const Text(
-                            'Do you want to remove the item from the Cart?',
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Are you Sure?'),
+                        content: const Text(
+                          'Do you want to remove the item from the Cart?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                            },
+                            child: const Text('No'),
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(false);
-                              },
-                              child: const Text('No'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                cartData.removeCartItem(widget.productId);
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Yes'),
-                            ),
-                          ],
-                        );
-                      });
+                          TextButton(
+                            onPressed: () {
+                              cartData.removeCartItem(widget.productId);
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Yes'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
               ),
             ),

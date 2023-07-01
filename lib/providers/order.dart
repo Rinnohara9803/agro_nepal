@@ -11,6 +11,8 @@ class Order with ChangeNotifier {
   String paymentStatus;
   String deliveryStatus;
   String deliveryTime;
+  String deliveryLocation;
+  String contactNumber;
   final List<CartItem> products;
   final DateTime dateTime;
 
@@ -22,6 +24,8 @@ class Order with ChangeNotifier {
     required this.paymentStatus,
     required this.deliveryStatus,
     required this.deliveryTime,
+    required this.deliveryLocation,
+    required this.contactNumber,
     required this.products,
     required this.dateTime,
   });
@@ -33,7 +37,29 @@ class Order with ChangeNotifier {
           .update({
         'paymentStatus': pStatus,
         'deliveryStatus': dStatus,
-        'deliveryTime': '40 minutes'
+        'deliveryTime': '40 minutes',
+        
+      });
+    } catch (e) {
+      return Future.error(
+        e.toString(),
+      );
+    }
+  }
+  
+  Future<void> changePOLStatus(String pStatus, String dStatus, String deliveryLocation, String contactNumber)  async 
+  {
+    try {
+      await FirebaseFirestore.instance
+          .collection('orders')
+          .doc(orderId)
+          .update({
+        'paymentStatus': pStatus,
+        'deliveryStatus': dStatus,
+        'deliveryTime': '40 minutes',
+        'deliveryLocation': deliveryLocation,
+        'contactNumber': contactNumber,
+        
       });
     } catch (e) {
       return Future.error(
@@ -54,6 +80,10 @@ class Order with ChangeNotifier {
         deliveryStatus = snapshot.data()!['deliveryStatus'];
         notifyListeners();
         deliveryTime = snapshot.data()!['deliveryTime'];
+        notifyListeners();
+        deliveryLocation = snapshot.data()!['deliveryLocation'];
+        notifyListeners();
+        contactNumber = snapshot.data()!['contactNumber'];
         notifyListeners();
       });
     } catch (e) {

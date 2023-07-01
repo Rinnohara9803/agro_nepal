@@ -6,5 +6,8 @@ class SharedService {
   static String email = '';
   static String userImageUrl = '';
   static LatLng currentPosition = const LatLng(0, 0);
+  static LatLng deliveryPosition = const LatLng(0, 0);
   static bool isNotificationOn = false;
+  static String contactNumber = '';
+  static String deliveryLocation = '';
 }

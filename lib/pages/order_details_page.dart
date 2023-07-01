@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:agro_nepal/pages/set_location_page.dart';
 import 'package:agro_nepal/providers/payments_provider.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +8,7 @@ import 'package:esewa_pnp/esewa.dart';
 import 'package:esewa_pnp/esewa_pnp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:khalti_flutter/khalti_flutter.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +33,14 @@ class OrderDetailsPage extends StatefulWidget {
 
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   @override
+  void dispose() {
+    SharedService.deliveryPosition = const LatLng(0, 0);
+    SharedService.contactNumber = '';
+    SharedService.deliveryLocation = '';
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final order = ModalRoute.of(context)!.settings.arguments as Order;
     return SafeArea(
@@ -40,6 +50,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           title: const Text(
             'Order Details',
           ),
+          actions: [
+            if (!SharedService.isUserAdmin && order.paymentStatus != 'Paid')
+              IconButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, SetLocationPage.routeName);
+                },
+                icon: const Icon(Icons.location_pin),
+              ),
+          ],
         ),
         body: ChangeNotifierProvider<Order>.value(
           value: order,
@@ -88,9 +107,11 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
     try {
       await esewaPnp.initPayment(payment: payment).then((value) async {
         await order
-            .changePOStatus(
+            .changePOLStatus(
           'Paid',
           'Processing',
+          SharedService.deliveryLocation,
+          SharedService.contactNumber,
         )
             .then((value) {
           SnackBars.showNormalSnackbar(context, 'Payment successful!!!');
@@ -124,9 +145,11 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
         var timeStamp = DateTime.now().toIso8601String();
         // Navigator.of(context).pop();
         order
-            .changePOStatus(
+            .changePOLStatus(
           'Paid',
           'Processing',
+          SharedService.deliveryLocation,
+          SharedService.contactNumber,
         )
             .then((value) {
           Provider.of<PaymentsProvider>(context, listen: false)
@@ -190,8 +213,6 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
   Widget build(BuildContext context) {
     final order = Provider.of<Order>(context);
 
-    
-
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 15,
@@ -245,26 +266,26 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
             ],
           ),
           if (SharedService.isUserAdmin)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Ordered By: ',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: ThemeClass.primaryColor,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Ordered By: ',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: ThemeClass.primaryColor,
+                  ),
                 ),
-              ),
-              Text(
-                order.orderedBy,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.normal,
+                Text(
+                  order.orderedBy,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(
             height: 8,
           ),
@@ -327,6 +348,60 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
               ),
               Text(
                 order.deliveryTime,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 4,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Delivery Location:',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  order.deliveryLocation,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 4,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Contact Number:',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              Text(
+                order.contactNumber,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.normal,
@@ -579,72 +654,78 @@ class _OrderDetailWidgetState extends State<OrderDetailWidget> {
               ),
               child: InkWell(
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isDismissible: true,
-                    enableDrag: true,
-                    builder: (BuildContext context) {
-                      return Container(
-                        padding: const EdgeInsets.all(
-                          12,
-                        ),
-                        height: 170,
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: const [
-                                Icon(
-                                  Icons.payment,
-                                  color: Colors.black,
-                                ),
-                                SizedBox(
-                                  width: 20,
-                                ),
-                                AutoSizeText(
-                                  'Choose Payment Method ',
-                                  style: TextStyle(
-                                    fontSize: 17,
+                  if (SharedService.deliveryPosition == const LatLng(0, 0) ||
+                      SharedService.contactNumber.isEmpty) {
+                    SnackBars.showErrorSnackBar(context,
+                        'Please provide your delivery address and contact number !!!');
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isDismissible: true,
+                      enableDrag: true,
+                      builder: (BuildContext context) {
+                        return Container(
+                          padding: const EdgeInsets.all(
+                            12,
+                          ),
+                          height: 170,
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(
+                                    Icons.payment,
                                     color: Colors.black,
                                   ),
-                                ),
-                              ],
-                            ),
-                            Expanded(
-                              child: Row(
-                                children: paymentMethods.map(
-                                  (paymentMethod) {
-                                    final payment =
-                                        paymentMethod['gateway'] as String;
-                                    return Expanded(
-                                      child: Center(
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            primary:
-                                                paymentMethod['color'] as Color,
-                                          ),
-                                          child: Text('$payment Payment'),
-                                          onPressed: () async {
-                                            Navigator.of(context).pop();
-                                            if (payment == 'Khalti') {
-                                              await _initKhaltiPayment(order);
-                                            } else {
-                                              await _initEsewaPayment(order);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ).toList(),
+                                  SizedBox(
+                                    width: 20,
+                                  ),
+                                  AutoSizeText(
+                                    'Choose Payment Method ',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
+                              Expanded(
+                                child: Row(
+                                  children: paymentMethods.map(
+                                    (paymentMethod) {
+                                      final payment =
+                                          paymentMethod['gateway'] as String;
+                                      return Expanded(
+                                        child: Center(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              primary: paymentMethod['color']
+                                                  as Color,
+                                            ),
+                                            child: Text('$payment Payment'),
+                                            onPressed: () async {
+                                              Navigator.of(context).pop();
+                                              if (payment == 'Khalti') {
+                                                await _initKhaltiPayment(order);
+                                              } else {
+                                                await _initEsewaPayment(order);
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }
                 },
                 child: Container(
                   height: 50,

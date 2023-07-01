@@ -27,6 +27,8 @@ class OrdersProvider with ChangeNotifier {
           'paymentStatus': 'Not paid',
           'deliveryStatus': 'Booked',
           'deliveryTime': 'Not specified',
+          'deliveryLocation': 'Not specified',
+          'contactNumber': 'Not specified',
           'products': products.map(
             (cartItem) {
               return {
@@ -51,6 +53,8 @@ class OrdersProvider with ChangeNotifier {
           paymentStatus: 'Not paid',
           deliveryStatus: 'Booked',
           deliveryTime: 'Not specified',
+          deliveryLocation: 'Not specified',
+          contactNumber: 'Not specified',
           products: products,
           dateTime: DateTime.parse(timeStamp),
         ),
@@ -80,6 +84,8 @@ class OrdersProvider with ChangeNotifier {
                 paymentStatus: order.data()['paymentStatus'],
                 deliveryStatus: order.data()['deliveryStatus'],
                 deliveryTime: order.data()['deliveryTime'].toString(),
+                deliveryLocation: order.data()['deliveryLocation'],
+                contactNumber: order.data()['contactNumber'],
                 products: (order.data()['products'] as List<dynamic>)
                     .map((orderData) {
                   return CartItem(
@@ -151,6 +157,10 @@ class OrdersProvider with ChangeNotifier {
         order.deliveryStatus = snapshot.data()!['deliveryStatus'];
         notifyListeners();
         order.deliveryTime = snapshot.data()!['deliveryTime'];
+        notifyListeners();
+        order.deliveryLocation = snapshot.data()!['deliveryLocation'];
+        notifyListeners();
+        order.contactNumber = snapshot.data()!['contactNumber'];
         notifyListeners();
       });
     } catch (e) {

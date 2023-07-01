@@ -1,183 +1,233 @@
-// import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import '../repositories/google_maps_repository.dart';
-// import '../services/shared_service.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../repositories/google_maps_repository.dart';
+import '../services/shared_service.dart';
+import '../utilities/themes.dart';
+import 'make_payments_page.dart';
 
-// class SetLocationPage extends StatefulWidget {
-//   static String routeName = '/setLocationPage';
-//   const SetLocationPage({Key? key}) : super(key: key);
+class SetLocationPage extends StatefulWidget {
+  static String routeName = '/setLocationPage';
+  const SetLocationPage({Key? key}) : super(key: key);
 
-//   @override
-//   State<SetLocationPage> createState() => _SetLocationPageState();
-// }
+  @override
+  State<SetLocationPage> createState() => _SetLocationPageState();
+}
 
-// class _SetLocationPageState extends State<SetLocationPage> {
-//   late GoogleMapController _googleMapController;
+class _SetLocationPageState extends State<SetLocationPage> {
+  late GoogleMapController _googleMapController;
+  double _latitude = SharedService.currentPosition.latitude;
+  double _longitude = SharedService.currentPosition.longitude;
 
-//   // List<Marker> _markers = [];
-//   Marker? _locationMarker;
+  final List<Marker> _markers = [];
+  Marker? _locationMarker;
 
-//   Marker getMarker(
-//     BuildContext context,
-//     double latitude,
-//     double longitude,
-//     String rentId,
-//   ) {
-//     return Marker(
-//       onTap: () {},
-//       markerId: MarkerId('kk'),
-//       infoWindow: InfoWindow(
-//         title: 'kk',
-//       ),
-//       icon: BitmapDescriptor.defaultMarkerWithHue(
-//         BitmapDescriptor.hueRed,
-//       ),
-//       position: LatLng(
-//         latitude,
-//         longitude,
-//       ),
-//     );
-//   }
+  Marker getCurrentMarker(double lat, double long) {
+    return Marker(
+      markerId: const MarkerId('Delivery Location'),
+      infoWindow: const InfoWindow(
+        title: 'Delivery Location',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueRed,
+      ),
+      position: LatLng(
+        lat,
+        long,
+      ),
+    );
+  }
 
-//   final _cameraPosition = CameraPosition(
-//     target: LatLng(
-//       SharedService.currentPosition.latitude,
-//       SharedService.currentPosition.longitude,
-//     ),
-//     zoom: 12.5,
-//     tilt: 0,
-//   );
+  Marker getMarker(
+    BuildContext context,
+    double latitude,
+    double longitude,
+    String rentId,
+  ) {
+    return Marker(
+      onTap: () {},
+      markerId: const MarkerId('Delivery Location'),
+      infoWindow: const InfoWindow(
+        title: 'Delivery Location',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueRed,
+      ),
+      position: LatLng(
+        latitude,
+        longitude,
+      ),
+    );
+  }
 
-//   @override
-//   void initState() {
-//     GoogleMapsRepository.determinePosition();
-//     _locationMarker = Marker(
-//       onTap: () {},
-//       markerId: const MarkerId('rino'),
-//       infoWindow: const InfoWindow(
-//         title: 'CurrentLocation',
-//       ),
-//       icon: BitmapDescriptor.defaultMarkerWithHue(
-//         BitmapDescriptor.hueBlue,
-//       ),
-//       position: LatLng(SharedService.currentPosition.latitude,
-//           SharedService.currentPosition.longitude),
-//     );
+  final _cameraPosition = CameraPosition(
+    target: LatLng(
+      SharedService.currentPosition.latitude,
+      SharedService.currentPosition.longitude,
+    ),
+    zoom: 12.5,
+    tilt: 0,
+  );
 
-//     super.initState();
-//   }
+  @override
+  void initState() {
+    GoogleMapsRepository.determinePosition();
+    _locationMarker = Marker(
+      onTap: () {},
+      markerId: const MarkerId('Delivery Location'),
+      infoWindow: const InfoWindow(
+        title: 'Delivery Location',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueBlue,
+      ),
+      position: LatLng(
+        SharedService.currentPosition.latitude,
+        SharedService.currentPosition.longitude,
+      ),
+    );
+    SharedService.deliveryPosition = LatLng(
+      SharedService.currentPosition.latitude,
+      SharedService.currentPosition.longitude,
+    );
+    _markers.add(_locationMarker!);
 
-//   @override
-//   void dispose() {
-//     _googleMapController.dispose();
-//     super.dispose();
-//   }
+    super.initState();
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return SafeArea(
-//       child: Scaffold(
-//         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-//         floatingActionButton: FloatingActionButton(
-//           backgroundColor: Colors.white,
-//           child: const Icon(
-//             Icons.center_focus_strong,
-//             color: Colors.blueGrey,
-//           ),
-//           onPressed: () {
-//             _googleMapController.animateCamera(
-//               CameraUpdate.newCameraPosition(_cameraPosition),
-//             );
-//           },
-//         ),
-//         body: Stack(
-//           children: [
-//             GoogleMap(
-//               mapType: MapType.normal,
-//               // markers: _markers.map((marker) {
-//               //   return marker;
-//               // }).toSet(),
-//               initialCameraPosition: _cameraPosition,
-//               onMapCreated: (controller) => _googleMapController = controller,
-//             ),
-//             Positioned(
-//               right: 10,
-//               top: 10,
-//               child: IconButton(
-//                 color: Colors.blueGrey,
-//                 onPressed: () {
-//                   _googleMapController.animateCamera(
-//                     CameraUpdate.newCameraPosition(
-//                       CameraPosition(
-//                         target: LatLng(
-//                           SharedService.currentPosition.latitude,
-//                           SharedService.currentPosition.longitude,
-//                         ),
-//                         zoom: 15.5,
-//                         tilt: 50,
-//                       ),
-//                     ),
-//                   );
-//                 },
-//                 icon: const Icon(
-//                   Icons.location_on_outlined,
-//                   size: 35,
-//                 ),
-//               ),
-//             ),
-//             Positioned(
-//               left: 15,
-//               top: 60,
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Row(
-//                     children: [
-//                       Container(
-//                         height: 12,
-//                         width: 12,
-//                         color: const Color.fromARGB(255, 72, 20, 195),
-//                       ),
-//                       const SizedBox(
-//                         width: 5,
-//                       ),
-//                       const Text(
-//                         'My Location',
-//                         style: TextStyle(
-//                           fontWeight: FontWeight.bold,
-//                           fontSize: 13,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                   const SizedBox(
-//                     height: 4,
-//                   ),
-//                   Row(
-//                     children: [
-//                       Container(
-//                         height: 12,
-//                         width: 12,
-//                         color: Colors.red,
-//                       ),
-//                       const SizedBox(
-//                         width: 5,
-//                       ),
-//                       const Text(
-//                         'Available rents',
-//                         style: TextStyle(
-//                           fontWeight: FontWeight.bold,
-//                           fontSize: 13,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             )
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  void dispose() {
+    _googleMapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        body: Stack(
+          children: [
+            GoogleMap(
+              mapType: MapType.normal,
+              markers: _markers.map((marker) {
+                return marker;
+              }).toSet(),
+              onTap: (latLng) {
+                print(latLng.latitude);
+                setState(() {
+                  if (_markers.length > 1) {
+                    _markers.removeLast();
+                    _latitude = latLng.latitude;
+                    _longitude = latLng.longitude;
+                    _markers.add(
+                      getCurrentMarker(
+                        latLng.latitude,
+                        latLng.longitude,
+                      ),
+                    );
+                  } else {
+                    _latitude = latLng.latitude;
+                    _longitude = latLng.longitude;
+                    _markers.add(
+                      getCurrentMarker(
+                        latLng.latitude,
+                        latLng.longitude,
+                      ),
+                    );
+                  }
+                });
+              },
+              initialCameraPosition: _cameraPosition,
+              onMapCreated: (controller) => _googleMapController = controller,
+            ),
+            Positioned(
+              left: 15,
+              top: 20,
+              child: Row(
+                children: [
+                  Container(
+                    height: 12,
+                    width: 12,
+                    color: const Color.fromARGB(255, 72, 20, 195),
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  const Text(
+                    'Delivery Location',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              right: 0,
+              left: 0,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 15,
+                  right: 100,
+                ),
+                child: Material(
+                  elevation: 10,
+                  borderRadius: BorderRadius.circular(
+                    10,
+                  ),
+                  child: InkWell(
+                    onTap: () async {
+                      SharedService.deliveryPosition =
+                          LatLng(_latitude, _longitude);
+                      await placemarkFromCoordinates(_latitude, _longitude)
+                          .then(
+                        (data) {
+                          SharedService.deliveryLocation =
+                              '${data.first.subLocality} , ${data.first.locality} , ${data.first.administrativeArea}';
+                          Navigator.pushReplacementNamed(
+                            context,
+                            MakePaymentsPage.routeName,
+                            arguments: {
+                              'country': data.first.country,
+                              'administrativeArea':
+                                  data.first.administrativeArea,
+                              'locality': data.first.locality,
+                              'subLocality': data.first.subLocality,
+                            },
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: ThemeClass.primaryColor,
+                        borderRadius: BorderRadius.circular(
+                          10,
+                        ),
+                      ),
+                      child: const Center(
+                        child: AutoSizeText(
+                          'Continue',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -7,12 +7,15 @@ import 'package:agro_nepal/pages/edit_profile_page.dart';
 import 'package:agro_nepal/pages/favourites_page.dart';
 import 'package:agro_nepal/pages/forgot_password_page.dart';
 import 'package:agro_nepal/pages/khalti_payment_page.dart';
+import 'package:agro_nepal/pages/make_payments_page.dart';
 import 'package:agro_nepal/pages/my_payments_page.dart';
 import 'package:agro_nepal/pages/my_products_page.dart';
 import 'package:agro_nepal/pages/order_details_page.dart';
 import 'package:agro_nepal/pages/orders_page.dart';
 import 'package:agro_nepal/pages/payment_details_page.dart';
 import 'package:agro_nepal/pages/productsby_category_page.dart';
+import 'package:agro_nepal/pages/search_page.dart';
+import 'package:agro_nepal/pages/set_location_page.dart';
 import 'package:agro_nepal/pages/settings_page.dart';
 import 'package:agro_nepal/providers/cart.dart';
 import 'package:agro_nepal/providers/orders_provider.dart';
@@ -129,7 +132,7 @@ class MyApp extends StatelessWidget {
               ChangeEmailPage.routeName: (context) => const ChangeEmailPage(),
               EditProductPage.routeName: (context) => const EditProfilePage(),
               OrderDetailsPage.routeName: (context) => const OrderDetailsPage(),
-              // SetLocationPage.routeName: (context) => const SetLocationPage(),
+              SetLocationPage.routeName: (context) => const SetLocationPage(),
               KhaltiPaymentPage.routeName: (context) =>
                   const KhaltiPaymentPage(),
               MyPaymentsPage.routeName: (context) => const MyPaymentsPage(),
@@ -137,6 +140,8 @@ class MyApp extends StatelessWidget {
                   const PaymentDetailsPage(),
               ProductsByCategoryPage.routeName: (context) =>
                   const ProductsByCategoryPage(),
+              MakePaymentsPage.routeName: (context) => const MakePaymentsPage(),
+              SearchPage.routeName: (context) => const SearchPage(),
             },
           );
         },

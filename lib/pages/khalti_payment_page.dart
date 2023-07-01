@@ -59,10 +59,10 @@ class KhaltiPaymentPage extends StatelessWidget {
               onPressed: () {
                 KhaltiScope.of(context).pay(
                   config: PaymentConfig(
-                    amount: amount * 100,
+                    amount: amount * 100, 
                     productIdentity: 'patch101',
                     productName: 'patch101',
-                    // mobile: '9841937556',
+                    // mobile: '9841937556',  
                     // mobileReadOnly: true,
                   ),
                   preferences: [

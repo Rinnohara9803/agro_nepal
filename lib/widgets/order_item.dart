@@ -87,6 +87,7 @@ class _OrderItemmState extends State<OrderItemm> {
   @override
   Widget build(BuildContext context) {
     final order = Provider.of<Order>(context, listen: true);
+    
 
     return Card(
       margin: const EdgeInsets.symmetric(
@@ -95,8 +96,11 @@ class _OrderItemmState extends State<OrderItemm> {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, OrderDetailsPage.routeName,
-              arguments: order,);
+          Navigator.pushNamed(
+            context,
+            OrderDetailsPage.routeName,
+            arguments: order,
+          );
         },
         child: Column(
           children: [
@@ -122,9 +126,11 @@ class _OrderItemmState extends State<OrderItemm> {
                         )
                       : IconButton(
                           color: Colors.red.withOpacity(0.6),
-                          onPressed: SharedService.isUserAdmin ? null : () async {
-                            await deleteOrder(order);
-                          },
+                          onPressed: SharedService.isUserAdmin
+                              ? null
+                              : () async {
+                                  await deleteOrder(order);
+                                },
                           icon: isLoading
                               ? const Center(
                                   child: SizedBox(
